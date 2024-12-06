@@ -1,3 +1,4 @@
+
 """
 app.py
 ============================
@@ -8,11 +9,17 @@ Autores:
 Desenvolvido por Julio Cesar da Silva Santos.
 
 Modificações:
-Atualizado com padrões Javadoc, princípios SOLID e Clean Code.
+Adicionado mais logs e simplificado o carregamento do CSV para garantir que todos os registros sejam carregados.
 """
 
-from flask import Flask, jsonify
+import logging
+from flask import Flask, jsonify, render_template_string
 from flask_sqlalchemy import SQLAlchemy
+import csv
+
+# Configura logging para depuração
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Inicializa a aplicação Flask
 app = Flask(__name__)
@@ -22,7 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Modelo de dados para o banco de dados
+
 class Movie(db.Model):
     """
     Modelo para armazenar informações sobre os filmes no banco de dados.
@@ -32,84 +39,170 @@ class Movie(db.Model):
     title = db.Column(db.String, nullable=False)
     studios = db.Column(db.String, nullable=False)
     producers = db.Column(db.String, nullable=False)
-    winner = db.Column(db.Boolean, default=False)
+    winner = db.Column(db.Boolean, nullable=True)
 
-# Função para popular o banco de dados
-def populate_database():
+    def __repr__(self):
+        return f"<Movie {self.title}>"
+
+
+def load_csv_to_db(csv_path):
     """
     Lê os dados do arquivo CSV e insere no banco de dados.
+    
+    :param csv_path: Caminho do arquivo CSV.
     """
-    import csv
-    try:
-        with open('movielist.csv', 'r') as file:
-            csv_reader = csv.DictReader(file, delimiter=';')
-            for row in csv_reader:
+    logger.info(f"Iniciando carregamento do CSV: {csv_path}")
+    count = 0
+    with open(csv_path, 'r', encoding='utf-8') as file:
+        reader = csv.DictReader(file, delimiter=';')
+        for row in reader:
+            logger.debug(f"Processando linha: {row}")
+            try:
                 movie = Movie(
                     year=int(row['year']),
                     title=row['title'],
                     studios=row['studios'],
                     producers=row['producers'],
-                    winner=row['winner'].strip().lower() == 'yes'
+                    winner=row.get('winner', '').strip().lower() == 'yes'
                 )
                 db.session.add(movie)
-            db.session.commit()
-    except FileNotFoundError:
-        print("Erro: Arquivo 'movielist.csv' não encontrado.")
-    except KeyError as e:
-        print(f"Erro: Chave ausente no arquivo CSV: {e}")
+                count += 1
+            except Exception as e:
+                logger.error(f"Erro ao processar linha: {row}. Erro: {e}")
+    db.session.commit()
+    logger.info(f"Carregamento concluído. Total de registros carregados: {count}")
 
-# Rota para calcular os intervalos dos produtores
+
+@app.route('/movies', methods=['GET'])
+def get_movies():
+    """
+    Endpoint para retornar todos os filmes no banco de dados.
+
+    :return: JSON contendo a lista de filmes.
+    """
+    movies = Movie.query.all()
+    result = [
+        {
+            "id": movie.id,
+            "year": movie.year,
+            "title": movie.title,
+            "studios": movie.studios,
+            "producers": movie.producers,
+            "winner": movie.winner
+        }
+        for movie in movies
+    ]
+    return jsonify(result)
+
+
 @app.route('/producers/intervals', methods=['GET'])
-def get_intervals():
+def get_producer_intervals():
     """
-    Calcula e retorna os produtores com os menores e maiores intervalos entre prêmios consecutivos.
+    Endpoint para calcular os produtores com maior e menor intervalo entre prêmios.
+
+    :return: JSON com os resultados.
     """
-    winners = Movie.query.filter_by(winner=True).all()
-    producers_intervals = {}
+    movies = Movie.query.filter_by(winner=True).all()
+    producer_intervals = {}
 
-    # Processa os intervalos para cada produtor
-    for movie in winners:
-        for producer in movie.producers.split(','):
-            producer = producer.strip()
-            if producer not in producers_intervals:
-                producers_intervals[producer] = []
-            producers_intervals[producer].append(movie.year)
+    for movie in movies:
+        producers = [p.strip() for p in movie.producers.split(',')]
+        for producer in producers:
+            if producer not in producer_intervals:
+                producer_intervals[producer] = []
+            producer_intervals[producer].append(movie.year)
 
-    # Calcula os intervalos mínimo e máximo
-    intervals = {"min": [], "max": []}
-    for producer, years in producers_intervals.items():
+    result = []
+    for producer, years in producer_intervals.items():
         if len(years) > 1:
-            sorted_years = sorted(years)
-            min_interval = min(y2 - y1 for y1, y2 in zip(sorted_years, sorted_years[1:]))
-            max_interval = max(y2 - y1 for y1, y2 in zip(sorted_years, sorted_years[1:]))
-            intervals["min"].append({
+            years.sort()
+            intervals = [y2 - y1 for y1, y2 in zip(years, years[1:])]
+            result.append({
                 "producer": producer,
-                "interval": min_interval,
-                "previousWin": sorted_years[0],
-                "followingWin": sorted_years[1]
-            })
-            intervals["max"].append({
-                "producer": producer,
-                "interval": max_interval,
-                "previousWin": sorted_years[0],
-                "followingWin": sorted_years[1]
+                "min_interval": min(intervals),
+                "max_interval": max(intervals),
             })
 
-    return jsonify(intervals)
+    return jsonify(result)
 
-# Inicializa o banco de dados e popula os dados
-with app.app_context():
-    db.create_all()
-    populate_database()
 
-# Rota inicial opcional
-@app.route('/', methods=['GET'])
-def home():
+@app.route('/')
+def index():
     """
-    Rota inicial da API.
-    """
-    return "Bem-vindo à API do Golden Raspberry Awards!"
+    Renderiza a página principal com a lista de filmes formatada.
 
-# Inicia o servidor
+    :return: HTML da página principal.
+    """
+    movies = Movie.query.all()
+    html_template = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lista de Filmes</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f9f9f9;
+            }
+            table {
+                width: 80%;
+                margin: 20px auto;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ccc;
+                padding: 10px;
+                text-align: left;
+            }
+            th {
+                background-color: #00c8ff;
+                color: white;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            h1 {
+                text-align: center;
+                margin-top: 20px;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Lista de Filmes</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ano</th>
+                    <th>Título</th>
+                    <th>Vencedor?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movie in movies %}
+                <tr>
+                    <td>{{ movie.id }}</td>
+                    <td>{{ movie.year }}</td>
+                    <td>{{ movie.title }}</td>
+                    <td>{{ 'Sim' if movie.winner else 'Não' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+    </html>
+    """
+    return render_template_string(html_template, movies=movies)
+
+
 if __name__ == '__main__':
+    # Inicializa o banco de dados e carrega os dados do CSV dentro do contexto da aplicação
+    with app.app_context():
+        db.create_all()
+        load_csv_to_db('movielist.csv')
     app.run(debug=True)

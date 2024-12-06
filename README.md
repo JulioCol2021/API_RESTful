@@ -1,104 +1,63 @@
-# API RESTful - Golden Raspberry Awards
 
-## Descrição
-API que retorna os produtores com os maiores e menores intervalos entre prêmios consecutivos.
+# API RESTful - Lista de Filmes
 
-## Pré-requisitos
-- Python 3.7 ou superior
-- Pip (gerenciador de pacotes)
+Este projeto implementa uma API RESTful para gerenciar uma lista de filmes, seguindo os padrões de Clean Code, princípios SOLID e maturidade de Richardson (nível 2).
 
-## Instalação
-1. Clone o repositório.
-2. Instale as dependências:
+## Requisitos
+
+- Python 3.8+
+- Flask
+- SQLAlchemy
+- pytest
+
+## Configuração e Execução
+
+1. **Clonar o Repositório**  
+   Certifique-se de clonar o repositório para seu ambiente local ou GitHub Codespaces.
+
+2. **Instalar Dependências**  
+   Execute o comando abaixo para instalar as dependências necessárias:  
    ```bash
-   pip install flask flask_sqlalchemy pytest
+   pip install -r requirements.txt
    ```
 
-## Executando a API
-1. Execute o arquivo `app.py`:
+3. **Executar a Aplicação**  
+   Inicie a aplicação com o seguinte comando:  
    ```bash
    python app.py
    ```
-2. Acesse o endpoint:
-   ```bash
-   http://127.0.0.1:5000/producers/intervals
-   ```
 
-## Executando os testes
-1. Execute o comando:
+4. **Acessar a API**  
+   - **Listar todos os filmes**:  
+     `GET http://127.0.0.1:5000/movies`  
+   - **Obter intervalos de produtores (maior e menor)**:  
+     `GET http://127.0.0.1:5000/producers/intervals`  
+
+## Testes de Integração
+
+1. **Executar os Testes**  
+   Os testes podem ser executados com o comando:  
    ```bash
    pytest
    ```
 
-## Estrutura do Projeto
-- `app.py`: Código principal da aplicação.
-- `movielist.csv`: Arquivo de entrada com os dados dos filmes.
-- `README.md`: Instruções para executar o projeto.
+2. **Cobertura dos Testes**  
+   Foram implementados 20 testes de integração para garantir a qualidade e a funcionalidade da aplicação.
 
+## Compatibilidade com GitHub Codespaces
 
-## Como rodar o projeto
+1. **Configuração Automática**  
+   O projeto foi adaptado para rodar em Codespaces. Certifique-se de que o ambiente está configurado com Python 3.8+.
 
-1. Certifique-se de ter Python 3 instalado.
-2. Instale as dependências executando:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Inicie o projeto:
-   ```bash
-   python app.py
-   ```
+2. **Instalação e Execução**  
+   Após iniciar o Codespace, siga os passos para instalar as dependências e rodar a aplicação.
 
-## Como executar os testes
+## Informações Adicionais
 
-1. Execute os testes com o comando:
-   ```bash
-   pytest test_app.py
-   ```
+- O banco de dados é carregado diretamente do arquivo `movielist.csv` ao iniciar a aplicação.
+- O banco utiliza SQLite em memória, garantindo facilidade no setup.
+- Todos os 267 registros do CSV são carregados na inicialização.
 
+## Frontend
 
-## Como rodar o projeto
-
-### Pré-requisitos
-- Python 3.8 ou superior.
-- Virtualenv (opcional, mas recomendado).
-
-### Passos para executar o projeto
-1. Clone este repositório:
-   ```bash
-   git clone <url-do-repositorio>
-   ```
-
-2. Navegue até o diretório do projeto:
-   ```bash
-   cd API_RESTful
-   ```
-
-3. Crie um ambiente virtual (opcional, mas recomendado):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/MacOS
-   venv\Scripts\activate   # Windows
-   ```
-
-4. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. Inicie o servidor da API:
-   ```bash
-   python app.py
-   ```
-
-6. Acesse a API em `http://localhost:5000`.
-
-## Como executar os testes
-1. Certifique-se de que o ambiente virtual (se criado) está ativo.
-2. Execute os testes com:
-   ```bash
-   pytest test_app.py
-   ```
-
-### Notas adicionais
-- A base de dados é criada automaticamente na memória ao iniciar a aplicação.
-- O arquivo CSV `movielist.csv` deve estar no mesmo diretório que `app.py`.
+Um frontend básico está em desenvolvimento para exibir a lista de filmes com um design UX/UI. Fique atento às próximas atualizações!
