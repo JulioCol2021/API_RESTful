@@ -28,10 +28,36 @@ Este projeto implementa uma API RESTful para gerenciar uma lista de filmes, segu
    ```
 
 4. **Acessar a API**  
+   - **Página da Lista de Filmes no Frontend - Apartir desta é possivel acessar todas as outras**
+      `GET http://127.0.0.1:5000`
+
    - **Listar todos os filmes**:  
      `GET http://127.0.0.1:5000/movies`  
+
    - **Obter intervalos de produtores (maior e menor)**:  
      `GET http://127.0.0.1:5000/producers/intervals`  
+
+   - **Obter anos com Multiplos vencedores**:  
+     `GET http://127.0.0.1:5000/producers/multiplewinners` 
+
+   - **Obter os três maiores Studio vencedores**:  
+     `GET http://127.0.0.1:5000/studios/top-three`      
+
+     **Página da Lista de Filmes no Frontend GitHube**:  
+   - `GET https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/`
+
+   - **Obter anos com Multiplos vencedores GitHube**:  
+     `GET https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/producers/multiplewinners`
+
+ - **Obter os três maiores Studio vencedores GitHube**:  
+     `https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/studios/top-three`
+
+   - **Listar todos os filmes GitHube**:  
+     `GET https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/movies`  
+
+   - **Obter intervalos de produtores (maior e menor) GitHube**:  
+     `GET https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/producers/intervals`  
+'
 
 ## Testes de Integração
 

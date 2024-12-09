@@ -125,6 +125,51 @@ def get_producer_intervals():
 
     return jsonify(result)
 
+@app.route('/producers/multiplewinners', methods=['GET'])
+def get_producer_multiplewinners():
+    """
+    Endpoint para calcular os três anos com o maior número de vencedores.
+
+    :return: JSON com os resultados.
+    """
+    movies = Movie.query.filter_by(winner=True).all()
+    year_counts = {}
+
+    for movie in movies:
+        if movie.year not in year_counts:
+            year_counts[movie.year] = 0
+        year_counts[movie.year] += 1
+
+    # Ordenar os anos por número de vencedores e pegar os três maiores
+    sorted_years = sorted(year_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    result = [{"year": year, "winner_count": count} for year, count in sorted_years]
+
+    return jsonify(result)
+
+@app.route('/studios/top-three', methods=['GET'])
+def get_top_three_studios():
+    """
+    Endpoint para calcular os três estúdios com o maior número de vencedores.
+
+    :return: JSON com os resultados.
+    """
+    movies = Movie.query.filter_by(winner=True).all()
+    studio_counts = {}
+
+    for movie in movies:
+        studios = [studio.strip() for studio in movie.studios.split(',')]
+        for studio in studios:
+            if studio not in studio_counts:
+                studio_counts[studio] = 0
+            studio_counts[studio] += 1
+
+    # Ordenar os estúdios por número de vencedores e pegar os três principais
+    sorted_studios = sorted(studio_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    result = [{"studio": studio, "winner_count": count} for studio, count in sorted_studios]
+
+    return jsonify(result)
 
 @app.route('/')
 def index():
@@ -135,67 +180,110 @@ def index():
     """
     movies = Movie.query.all()
     html_template = """
-    <!DOCTYPE html>
     <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lista de Filmes</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f9f9f9;
-            }
-            table {
-                width: 80%;
-                margin: 20px auto;
-                border-collapse: collapse;
-            }
-            th, td {
-                border: 1px solid #ccc;
-                padding: 10px;
-                text-align: left;
-            }
-            th {
-                background-color: #00c8ff;
-                color: white;
-            }
-            tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
-            h1 {
-                text-align: center;
-                margin-top: 20px;
-                color: #333;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Lista de Filmes</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Ano</th>
-                    <th>Título</th>
-                    <th>Vencedor?</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for movie in movies %}
-                <tr>
-                    <td>{{ movie.id }}</td>
-                    <td>{{ movie.year }}</td>
-                    <td>{{ movie.title }}</td>
-                    <td>{{ 'Sim' if movie.winner else 'Não' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </body>
-    </html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Filmes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #00c8ff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+        .links-section {
+            width: 80%;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .links-section h2 {
+            color: #007BFF;
+        }
+        .links-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .links-section ul li {
+            margin: 5px 0;
+        }
+        .links-section ul li a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .links-section ul li a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="links-section">
+        <h2>Acessar a API - Desktop</h2>
+        <ul>
+            <li><a href="http://127.0.0.1:5000">Página da Lista de Filmes no Frontend</a></li>
+            <li><a href="http://127.0.0.1:5000/movies">Listar todos os filmes</a></li>
+            <li><a href="http://127.0.0.1:5000/producers/intervals">Obter intervalos de produtores (maior e menor)</a></li>
+            <li><a href="http://127.0.0.1:5000/producers/multiplewinners">Obter anos com múltiplos vencedores</a></li>
+            <li><a href="http://127.0.0.1:5000/studios/top-three">Obter os três maiores Studio vencedores</a></li>
+        </ul>
+        <h2>Acessar a API - GitHub</h2>
+        <ul>
+            <li><a href="https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/">Página da Lista de Filmes no Frontend GitHub</a></li>
+            <li><a href="https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/movies">Listar todos os filmes GitHub</a></li>
+            <li><a href="https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/producers/intervals">Obter intervalos de produtores (maior e menor) GitHub</a></li>
+            <li><a href="https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/producers/multiplewinners">Obter anos com múltiplos vencedores GitHub</a></li>
+            <li><a href="https://literate-winner-jwj5xwgwvjpcp4gr-5000.app.github.dev/studios/top-three">Obter os três maiores Studio vencedores GitHub</a></li>
+        </ul>
+    </div>
+
+    <h1>Lista de Filmes</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ano</th>
+                <th>Título</th>
+                <th>Vencedor?</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movie in movies %}
+            <tr>
+                <td>{{ movie.id }}</td>
+                <td>{{ movie.year }}</td>
+                <td>{{ movie.title }}</td>
+                <td>{{ 'Sim' if movie.winner else 'Não' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
     """
     return render_template_string(html_template, movies=movies)
 
